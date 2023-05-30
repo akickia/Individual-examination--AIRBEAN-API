@@ -68,20 +68,47 @@ app.post('/api/cart/add', async (request, response) => {
     console.log(findProduct.title, findProduct.price)
     //Check if findproduct.hasProperty("price") ? Kolla på handledning om nödvändigt.
     if (findProduct) {
-        cartDb.insert(findProduct)
+        const newCartItem = {...findProduct, _id: new Date().getTime().toString()};
+        cartDb.insert(newCartItem);
         response.send({success: true, message: "Product added to cart"})
     } else {
         response.status(400).send({success: false, message: "Something went wrong, please try again"})
     }
 })
 
-app.put('/api/cart/sendOrder', async (request, response) => {
+app.put('/api/cart/sendorder', async (request, response) => {
     const userId = request.body._id
     const user = await usersDb.findOne({_id: userId})
     console.log(user)
     console.log( "Hej ")
     const productsInCart = await cartDb.find({})
-    const updatedUser = await usersDb.update({_id: userId}, {$push: {orders: productsInCart}}, {})
+    await usersDb.update({_id: userId}, {$push: {orders: productsInCart}}, {})
+    await cartDb.remove({}, {multi: true})
+    response.json({success: true})
+})
+
+// newGuestUser = {
+// name: name,
+//lastname: lastName,
+// email: email,
+// password: password,
+// adress: {
+    //streetname: streetName,
+    //zip code: zipCode,
+    // city: city
+    //}
+    // orders: {
+        //23489238
+    //}
+//}
+
+app.put('/api/cart/sendguestorder', async (request, response) => {
+    const userId = request.body._id
+    const user = await usersDb.findOne({_id: userId})
+    console.log(user)
+    console.log( "Hej ")
+    const productsInCart = await cartDb.find({})
+    await usersDb.update({_id: userId}, {$push: {orders: productsInCart}}, {})
     await cartDb.remove({}, {multi: true})
     response.json({success: true})
 })
