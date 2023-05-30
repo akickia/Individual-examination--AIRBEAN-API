@@ -1,3 +1,6 @@
+const nedb = require('nedb-promise');
+const testDb = new nedb({ filename: 'users.db', autoload: true });
+
 
 function checkBody(request, response, next) {
   const newUser = request.body;
@@ -17,19 +20,17 @@ function checkBody(request, response, next) {
 }
 
 
-// function existingUser(request, response, next) {
-//     const newUser = request.body;
-//     const existingUser = usersDb.find(user => user.username === newUser.username || user.email === newUser.email);
-
-//     if (existingUser && existingUser.username === newUser.username) {
-//         response.status(400).json({ success: false, message: "Username already exists, please try to login or request new password" });
-
-//      } else if (existingUser && existingUser.email === newUser.email) {
-//         response.status(400).json({ success: false, message: "Email already exists, please try to login or request new password" });
-//     } else {
-//         next();
-//     }
-// }
+async function existingUser (request, response, next) {
+  const { username, email } = request.body
+  const existingUser = await testDb.findOne({ $or: [{ username: username }, { email: email }] });
+  if (existingUser && existingUser.username === username) {
+      response.status(400).json({ success: false, message: "Username already exists, please try to login or request new password" });
+   } else if (existingUser && existingUser.email === email) {
+      response.status(400).json({ success: false, message: "Email already exists, please try to login or request new password" });
+  } else {
+      next();
+  }
+}
 
 
-module.exports = { checkBody }
+module.exports = { checkBody, existingUser }

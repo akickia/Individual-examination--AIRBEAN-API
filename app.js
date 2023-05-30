@@ -1,11 +1,10 @@
 const express = require('express');
 const app = express();
 const nedb = require('nedb-promise');
-const { checkBody } = require('./middleware');
+const { checkBody, existingUser } = require('./middleware');
 const beansDb = new nedb({ filename: 'beans.db', autoload: true });
-export const usersDb = new nedb({ filename: 'users.db', autoload: true });
+const usersDb = new nedb({ filename: 'users.db', autoload: true });
 const cartDb = new nedb({ filename: 'cart.db', autoload: true });
-
 
 app.use(express.json());
 
@@ -35,19 +34,23 @@ app.get('/api/users', async (request, response) =>{
 //}
 
 //Sign up new user
-app.post('/api/signup', checkBody, async (request, response) => {
-    const newUser = request.body;
-    const existingUser = await usersDb.findOne({ $or: [{ username: newUser.username }, { email: newUser.email }] });
+app.post('/api/signup', checkBody, existingUser, async (request, response) => {
+console.log("Hej")
+const newUser = request.body;
+await usersDb.insert(newUser);
+      response.send({ success: true, user: newUser});
+    // const newUser = request.body;
+    // const existingUser = await usersDb.findOne({ $or: [{ username: newUser.username }, { email: newUser.email }] });
 
-    if (existingUser && existingUser.username === newUser.username) {
-        response.status(400).json({ success: false, message: "Username already exists, please try to login or request new password" });
+    // if (existingUser && existingUser.username === newUser.username) {
+    //     response.status(400).json({ success: false, message: "Username already exists, please try to login or request new password" });
 
-     } else if (existingUser && existingUser.email === newUser.email) {
-        response.status(400).json({ success: false, message: "Email already exists, please try to login or request new password" });
-    } else {
-        await usersDb.insert(newUser);
-        response.send({ success: true, user: newUser});
-    }
+    //  } else if (existingUser && existingUser.email === newUser.email) {
+    //     response.status(400).json({ success: false, message: "Email already exists, please try to login or request new password" });
+    // } else {
+    //     await usersDb.insert(newUser);
+    //     response.send({ success: true, user: newUser});
+    // }
 });
 
 //Login user
@@ -82,7 +85,6 @@ app.put('/api/cart/sendorder', async (request, response) => {
     console.log(user)
     
     const orderMade = new Date();
-    // let productsInCartWithDate = productsInCart.push(orderMade) 
     
     let productsInCart = await cartDb.find({})
 
