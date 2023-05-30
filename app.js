@@ -82,13 +82,20 @@ app.put('/api/cart/sendorder', async (request, response) => {
     console.log(user)
     
     // const orderMade = new Date();
-    // let productsInCartWithDate = {...productsInCart, orderMade}
-
+    // let productsInCartWithDate = productsInCart.push(orderMade) 
+    
     let productsInCart = await cartDb.find({})
+
     await usersDb.update({_id: userId}, {$push: {orders: productsInCart}}, {})
     await cartDb.remove({}, {multi: true})
     response.json({success: true})
 })
+
+app.get('/api/user/orderhistory', async (request, response) => {
+    const userId = request.body._id;
+    const user = await usersDb.findOne({_id: userId});
+    response.send({ success: true, orders: user.orders });
+});
 
 // newGuestUser = {
 // name: name,
