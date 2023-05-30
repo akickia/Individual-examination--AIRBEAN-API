@@ -1,20 +1,20 @@
 
 function checkBody(request, response, next) {
-    const newUser = request.body;
-  
-    if (
-      newUser.hasOwnProperty("username") &&
-      newUser.hasOwnProperty("email") &&
-      newUser.hasOwnProperty("password") &&
-      newUser.adress.hasOwnProperty("streetname") &&
-      newUser.adress.hasOwnProperty("zipcode") &&
-      newUser.adress.hasOwnProperty("city") 
-    ) {
-      next();
-    } else {
-      response.status(400).json({ success: false, error: 'Please enter the missing value/s' });
-    }
+  const newUser = request.body;
+
+  if (
+    newUser.hasOwnProperty("username") &&
+    newUser.hasOwnProperty("email") &&
+    newUser.hasOwnProperty("password") &&
+    newUser.adress.hasOwnProperty("streetname") &&
+    newUser.adress.hasOwnProperty("zipcode") &&
+    newUser.adress.hasOwnProperty("city") 
+  ) {
+    next();
+  } else {
+    response.status(400).json({ success: false, error: 'Please enter the missing value/s' });
   }
+}
 
 
 // function existingUser(request, response, next) {
@@ -31,5 +31,5 @@ function checkBody(request, response, next) {
 //     }
 // }
 
-  
-  module.exports = { checkBody }
+
+module.exports = { checkBody }
