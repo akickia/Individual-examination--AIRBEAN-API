@@ -80,8 +80,11 @@ app.put('/api/cart/sendorder', async (request, response) => {
     const userId = request.body._id
     const user = await usersDb.findOne({_id: userId})
     console.log(user)
-    console.log( "Hej ")
-    const productsInCart = await cartDb.find({})
+    
+    // const orderMade = new Date();
+    // let productsInCartWithDate = {...productsInCart, orderMade}
+
+    let productsInCart = await cartDb.find({})
     await usersDb.update({_id: userId}, {$push: {orders: productsInCart}}, {})
     await cartDb.remove({}, {multi: true})
     response.json({success: true})
