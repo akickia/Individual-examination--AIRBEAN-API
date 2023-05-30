@@ -3,7 +3,7 @@ const app = express();
 const nedb = require('nedb-promise');
 const { checkBody } = require('./middleware');
 const beansDb = new nedb({ filename: 'beans.db', autoload: true });
-const usersDb = new nedb({ filename: 'users.db', autoload: true });
+export const usersDb = new nedb({ filename: 'users.db', autoload: true });
 const cartDb = new nedb({ filename: 'cart.db', autoload: true });
 
 
@@ -81,12 +81,12 @@ app.put('/api/cart/sendorder', async (request, response) => {
     const user = await usersDb.findOne({_id: userId})
     console.log(user)
     
-    // const orderMade = new Date();
+    const orderMade = new Date();
     // let productsInCartWithDate = productsInCart.push(orderMade) 
     
     let productsInCart = await cartDb.find({})
 
-    await usersDb.update({_id: userId}, {$push: {orders: productsInCart}}, {})
+    await usersDb.update({_id: userId}, {$push: {orders: {items: productsInCart, date: orderMade}}}, {})
     await cartDb.remove({}, {multi: true})
     response.json({success: true})
 })
