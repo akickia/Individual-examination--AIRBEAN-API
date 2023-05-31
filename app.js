@@ -1,10 +1,7 @@
 const express = require('express');
 const app = express();
-const nedb = require('nedb-promise');
+const {usersDb, beansDb, cartDb} = require('./modules/db')
 const { checkBody, existingUser } = require('./middleware');
-const beansDb = new nedb({ filename: 'beans.db', autoload: true });
-const usersDb = new nedb({ filename: 'users.db', autoload: true });
-const cartDb = new nedb({ filename: 'cart.db', autoload: true });
 
 app.use(express.json());
 
@@ -35,7 +32,6 @@ app.get('/api/users', async (request, response) =>{
 
 //Sign up new user
 app.post('/api/signup', checkBody, existingUser, async (request, response) => {
-console.log("Hej")
 const newUser = request.body;
 await usersDb.insert(newUser);
       response.send({ success: true, user: newUser});
@@ -128,3 +124,5 @@ app.put('/api/cart/sendguestorder', async (request, response) => {
 app.listen(8000, () =>{
     console.log('App started on port 8000!!');
 });
+
+
