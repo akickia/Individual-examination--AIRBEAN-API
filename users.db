@@ -1,6 +1,6 @@
-{"username":"adams","email":"hej@hej.nu","password":"hej123","adress":{"streetname":"En bra väg","zipcode":12345,"city":"Stockholm"},"_id":"9Ihl0ZxTNF85UW3K","orders":[[{"id":"coffee-0lp6ter3bh","title":"Kaffe Latte","desc":"Bryggd på månadens bönor.","price":54,"_id":"1685448366015"}],[{"id":"coffee-0lp6ter3bh","title":"Kaffe Latte","desc":"Bryggd på månadens bönor.","price":54,"_id":"1685448465179"},{"id":"coffee-0lp6ter3bh","title":"Kaffe Latte","desc":"Bryggd på månadens bönor.","price":54,"_id":"1685448468676"}],2]}
+{"username":"malek","email":"hej@haj.nu","password":"hej123","adress":{"streetname":"En bra väg","zipcode":12345,"city":"Stockholm"},"_id":"0PGpHLs9QQoQw6Qk"}
+{"username":"adams","email":"hej@hej.nu","password":"hej123","adress":{"streetname":"En bra väg","zipcode":12345,"city":"Stockholm"},"_id":"9Ihl0ZxTNF85UW3K"}
 {"username":"adamssssss","email":"hej@hej.se","password":"hej123","adress":{"streetname":"En bra väg","zipcode":12345,"city":"Stockholm"},"_id":"HJpMbhyqII6qaGCU"}
 {"username":"adamsss","email":"hej@hej.vvv","password":"hej123","adress":{"streetname":"En bra väg","zipcode":12345,"city":"Stockholm"},"_id":"Oz4ogEh24u0ZOLr8"}
 {"username":"kicki","email":"hej@haj.com","password":"hej123","adress":{"streetname":"En bra väg","zipcode":12345,"city":"Stockholm"},"_id":"vm3eZR70tKSGWNKr"}
 {"username":"adam","email":"hej@hej.com","password":"hej123","adress":{"streetname":"En bra väg","zipcode":12345,"city":"Stockholm"},"_id":"w0gybwEb8ZT88cM5"}
-{"username":"malek","email":"hej@haj.nu","password":"hej123","adress":{"streetname":"En bra väg","zipcode":12345,"city":"Stockholm"},"_id":"0PGpHLs9QQoQw6Qk"}

@@ -1,7 +1,12 @@
 const express = require('express');
 const app = express();
-const {usersDb, beansDb, cartDb} = require('./modules/db')
+const {usersDb, beansDb, cartDb, guestOrdersDb} = require('./modules/db')
 const { checkBody, existingUser } = require('./middleware');
+const { createToken } = require('./modules/auth')
+
+const moment = require('moment')
+const orderMade = moment();
+
 
 app.use(express.json());
 
@@ -35,30 +40,24 @@ app.post('/api/signup', checkBody, existingUser, async (request, response) => {
 const newUser = request.body;
 await usersDb.insert(newUser);
       response.send({ success: true, user: newUser});
-    // const newUser = request.body;
-    // const existingUser = await usersDb.findOne({ $or: [{ username: newUser.username }, { email: newUser.email }] });
-
-    // if (existingUser && existingUser.username === newUser.username) {
-    //     response.status(400).json({ success: false, message: "Username already exists, please try to login or request new password" });
-
-    //  } else if (existingUser && existingUser.email === newUser.email) {
-    //     response.status(400).json({ success: false, message: "Email already exists, please try to login or request new password" });
-    // } else {
-    //     await usersDb.insert(newUser);
-    //     response.send({ success: true, user: newUser});
-    // }
 });
 
 //Login user
 app.post('/api/login', async (request, response) => {
     const user = request.body;
-    const existingUser = await usersDb.findOne({ $or: [{ username: user.username }]});
+    const existingUser = await usersDb.findOne({ username: user.username });
     if (existingUser) {
-        response.send({ success: true,Message: "Welcome to beans", User: existingUser});
+        if (existingUser.password === user.password) {
+            createToken(existingUser)
+        }
+        else {
+            response.status(400).json({success: false, message: "Wrong password, try again"})
+        }
     } else {
-        response.status(400).json({ success: false, message: "Wrong username or password, please try again!" });
+        response.status(400).json({ success: false, message: "User does not exist"});
     }
 })
+//Ev flytta till middleware senare efter vi lagt till token? 
 
 //Add to cart
 app.post('/api/cart/add', async (request, response) => {
@@ -77,16 +76,12 @@ app.post('/api/cart/add', async (request, response) => {
 
 app.put('/api/cart/sendorder', async (request, response) => {
     const userId = request.body._id
-    const user = await usersDb.findOne({_id: userId})
-    console.log(user)
-    
-    const orderMade = new Date();
-    
+
     let productsInCart = await cartDb.find({})
 
-    await usersDb.update({_id: userId}, {$push: {orders: {items: productsInCart, date: orderMade}}}, {})
+    await usersDb.update({_id: userId}, {$push: {orders: {items: productsInCart, date: orderMade.format()}}}, {})
     await cartDb.remove({}, {multi: true})
-    response.json({success: true})
+    response.json({success: true, message: "You order will be delivered " + orderMade.add(30, 'minutes').calendar() })
 })
 
 app.get('/api/user/orderhistory', async (request, response) => {
@@ -110,15 +105,17 @@ app.get('/api/user/orderhistory', async (request, response) => {
     //}
 //}
 
-app.put('/api/cart/sendguestorder', async (request, response) => {
-    const userId = request.body._id
-    const user = await usersDb.findOne({_id: userId})
-    console.log(user)
-    console.log( "Hej ")
+app.post('/api/cart/sendguestorder', async (request, response) => {
+    const guestOrder = request.body
     const productsInCart = await cartDb.find({})
-    await usersDb.update({_id: userId}, {$push: {orders: productsInCart}}, {})
+    const newOrder = {
+        guestUser: guestOrder,
+        products: productsInCart,
+        date: orderMade.format()
+    }
+    await guestOrdersDb.insert(newOrder)
     await cartDb.remove({}, {multi: true})
-    response.json({success: true})
+    response.json({success: true, newOrder: newOrder, message: "You order will be delivered " + orderMade.add(30, 'minutes').calendar()})
 })
 
 app.listen(8000, () =>{
