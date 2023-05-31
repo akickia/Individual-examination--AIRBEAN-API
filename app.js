@@ -1,8 +1,9 @@
 const express = require('express');
 const app = express();
 const {usersDb, beansDb, cartDb, guestOrdersDb} = require('./modules/db')
-const { checkBody, existingUser } = require('./middleware');
+const { checkBody, existingUser, checkToken } = require('./middleware');
 const { createToken } = require('./modules/auth')
+const jwt = require('jsonwebtoken')
 
 const moment = require('moment')
 const orderMade = moment();
@@ -48,7 +49,10 @@ app.post('/api/login', async (request, response) => {
     const existingUser = await usersDb.findOne({ username: user.username });
     if (existingUser) {
         if (existingUser.password === user.password) {
-            createToken(existingUser)
+            const token = jwt.sign({id: existingUser._id}, 'a1b1c1', {
+            expiresIn: 300 
+            })
+            response.json({success: true, message: "Welcome to AirBean!", token: token })
         }
         else {
             response.status(400).json({success: false, message: "Wrong password, try again"})
@@ -74,17 +78,22 @@ app.post('/api/cart/add', async (request, response) => {
     }
 })
 
-app.put('/api/cart/sendorder', async (request, response) => {
+//AUT
+app.put('/api/cart/sendorder', checkToken, async (request, response) => {
     const userId = request.body._id
-
     let productsInCart = await cartDb.find({})
-
-    await usersDb.update({_id: userId}, {$push: {orders: {items: productsInCart, date: orderMade.format()}}}, {})
-    await cartDb.remove({}, {multi: true})
-    response.json({success: true, message: "You order will be delivered " + orderMade.add(30, 'minutes').calendar() })
+    console.log(productsInCart)
+    if (productsInCart.length > 0) { 
+        await usersDb.update({_id: userId}, {$push: {orders: {items: productsInCart, date: orderMade.format()}}}, {})
+        await cartDb.remove({}, {multi: true})
+        response.json({success: true, message: "You order will be delivered " + orderMade.add(30, 'minutes').calendar() })
+    } else {
+        response.status(400).send({success: false, message: "No products in cart"})
+    }
 })
 
-app.get('/api/user/orderhistory', async (request, response) => {
+//AUT
+app.get('/api/user/orderhistory', checkToken, async (request, response) => {
     const userId = request.body._id;
     const user = await usersDb.findOne({_id: userId});
     response.send({ success: true, orders: user.orders });

@@ -1,18 +1,11 @@
 
-const jwt = require('jsonwebtoken')
+
 
 function createToken(user) {
   let result = {
     success: false
 }  
-  result.success = true
-    //Create webtoken (jwt)
-    const token = jwt.sign({id: user._id}, 'a1b1c1', {
-      expiresIn: 60 
-    })
-    console.log(user._id)
-    result.token = token
-    result.message = "Welcome to AirBean!"
+  
 }
 
 
