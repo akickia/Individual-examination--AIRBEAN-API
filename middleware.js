@@ -2,7 +2,7 @@ const {usersDb} = require('./modules/db');
 const jwt = require('jsonwebtoken')
 
 //Check if fields in body is correct for adding new user
-function checkBody(request, response, next) {
+function checkBodySignup(request, response, next) {
   const newUser = request.body;
   if (
     (newUser.hasOwnProperty("username") && newUser.username.length !== 0) &&
@@ -19,7 +19,7 @@ function checkBody(request, response, next) {
 }
 
 //Check if fields in body is correct for adding guest order
-function checkGuestBody(request, response, next) {
+function checkBodyGuestOrder(request, response, next) {
   const newUser = request.body;
   if (
     (newUser.hasOwnProperty("name") && newUser.name.length !== 0) &&
@@ -35,7 +35,7 @@ function checkGuestBody(request, response, next) {
 }
 
 //Check if username and email exist
-async function existingUser (request, response, next) {
+async function checkExistingUser (request, response, next) {
   const { username, email } = request.body
   const existingUser = await usersDb.findOne({ $or: [{ username: username }, { email: email }] });
   if (existingUser && existingUser.username === username) {
@@ -47,7 +47,7 @@ async function existingUser (request, response, next) {
   }
 }
 
-function checkBodyAdd(request, response, next) {
+function checkBodyProductId(request, response, next) {
   const product = request.body
     if (product.hasOwnProperty("id") && product.id.length !== 0) {
       next()
@@ -55,6 +55,26 @@ function checkBodyAdd(request, response, next) {
       response.status(400).send({success: false, error: "Wrong input, please try again"})
     }
 }
+
+function checkBodyLogin(request, response, next) {
+  const user = request.body
+    if ((user.hasOwnProperty("username") && user.username.length !== 0) &&
+    (user.hasOwnProperty("password") && user.password.length !== 0)) {
+      next()
+    } else {
+      response.status(400).send({success: false, error: "Wrong input, please try again"})
+    }
+}
+
+function checkBodyUserId(request, response, next) {
+  const user = request.body
+    if (user.hasOwnProperty("id") && user.id.length !== 0) {
+      next()
+    } else {
+      response.status(400).send({success: false, error: "Wrong input, please try again"})
+    }
+}
+
 
 //Check if token is valid
 function checkToken (request, response, next) {
@@ -68,4 +88,4 @@ function checkToken (request, response, next) {
   }
 }
 
-module.exports = { checkBody, existingUser, checkToken, checkGuestBody, checkBodyAdd }
+module.exports = { checkBodySignup, checkExistingUser, checkToken, checkBodyGuestOrder, checkBodyProductId, checkBodyLogin, checkBodyUserId }

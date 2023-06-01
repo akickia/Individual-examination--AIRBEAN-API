@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const { usersDb, beansDb, cartDb, guestOrdersDb } = require('./modules/db')
-const { checkBody, existingUser, checkToken, checkGuestBody, checkBodyAdd } = require('./middleware');
+const { checkBodySignup, checkExistingUser, checkToken, checkBodyGuestOrder, checkBodyProductId, checkBodyLogin, checkBodyUserId } = require('./middleware');
 const jwt = require('jsonwebtoken')
 
 const moment = require('moment')
@@ -34,7 +34,7 @@ app.get('/api/users', async (request, response) => {
 //}
 //Middleware to check input in body + if username and email already exists
 //if not - add user to user database
-app.post('/api/signup', checkBody, existingUser, async (request, response) => {
+app.post('/api/signup', checkBodySignup, checkExistingUser, async (request, response) => {
     const newUser = request.body;
     await usersDb.insert(newUser);
     response.json({ success: true, user: newUser });
@@ -46,8 +46,9 @@ app.post('/api/signup', checkBody, existingUser, async (request, response) => {
 // username: username,
 // password: password
 //}
+//Middleware to check input in body 
 //Check if username and password is correct, if so add json webtoken for a limited time
-app.post('/api/login', async (request, response) => {
+app.post('/api/login', checkBodyLogin, async (request, response) => {
     const user = request.body;
     const existingUser = await usersDb.findOne({ username: user.username });
     if (existingUser) {
@@ -68,9 +69,10 @@ app.post('/api/login', async (request, response) => {
 //Add to cart
 //Expected input in body: 
 //{ id: productid }
+//Middleware to check input in body 
 //Check if product exist, then add to cart database
 //Add date as product id to avoid conflicts with same id
-app.post('/api/cart/add', checkBodyAdd, async (request, response) => {
+app.post('/api/cart/add', checkBodyProductId, async (request, response) => {
     const product = request.body;
     const findProduct = await beansDb.findOne({ id: product.id })
     if (findProduct) {
@@ -86,11 +88,12 @@ app.post('/api/cart/add', checkBodyAdd, async (request, response) => {
 //Expected input in body: 
 //{ id: user id }
 //Add token in header as authorization
+//Middleware to check input in body 
 //Middleware to check if token is valid
 //If token is valid - check if user id exist and there is products in cart
 //If all is correct, add products in cart to user together with date and total sum of order
 //Empty cart and return when order will arrive + order value
-app.put('/api/cart/sendorder', checkToken, async (request, response) => {
+app.put('/api/cart/sendorder', checkToken, checkBodyUserId, async (request, response) => {
     const userId = request.body._id;
     const user = await usersDb.findOne({ _id: userId });
     let productsInCart = await cartDb.find({});
@@ -125,7 +128,7 @@ app.put('/api/cart/sendorder', checkToken, async (request, response) => {
 //Check if there are products in cart
 //If all is correct, add products in cart to guestorder database together with date and total sum of order
 //Empty cart and return when order will arrive + order value
-app.post('/api/cart/sendguestorder', checkGuestBody, async (request, response) => {
+app.post('/api/cart/sendguestorder', checkBodyGuestOrder, async (request, response) => {
     const guestOrder = request.body
     const productsInCart = await cartDb.find({})
     orderMade = moment();
@@ -150,9 +153,12 @@ app.post('/api/cart/sendguestorder', checkGuestBody, async (request, response) =
 //See order history
 //Expected input in body: 
 //{ id: user id }
+//Add token in header as authorization
+//Middleware to check input in body 
+//Middleware to check if token is valid
 //Check if user exist
 //Return list of orders and total sum of all orders 
-app.get('/api/user/orderhistory', checkToken, async (request, response) => {
+app.get('/api/user/orderhistory', checkToken, checkBodyUserId, async (request, response) => {
     const userId = request.body._id;
     const user = await usersDb.findOne({ _id: userId });
     if (user) {
