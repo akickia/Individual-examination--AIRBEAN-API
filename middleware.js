@@ -1,6 +1,7 @@
 const {usersDb} = require('./modules/db');
 const jwt = require('jsonwebtoken')
 
+//Check if fields in body is correct for adding new user
 function checkBody(request, response, next) {
   const newUser = request.body;
   if (
@@ -16,6 +17,8 @@ function checkBody(request, response, next) {
     response.status(400).json({ success: false, error: 'Please enter the missing value/s' });
   }
 }
+
+//Check if fields in body is correct for adding guest order
 function checkGuestBody(request, response, next) {
   const newUser = request.body;
   if (
@@ -31,7 +34,7 @@ function checkGuestBody(request, response, next) {
   }
 }
 
-
+//Check if username and email exist
 async function existingUser (request, response, next) {
   const { username, email } = request.body
   const existingUser = await usersDb.findOne({ $or: [{ username: username }, { email: email }] });
@@ -44,6 +47,7 @@ async function existingUser (request, response, next) {
   }
 }
 
+//Check if token is valid
 function checkToken (request, response, next) {
   const token = request.headers.authorization
   try {
@@ -54,6 +58,5 @@ function checkToken (request, response, next) {
     response.json({success: false, error: 'Invalid token'})
   }
 }
-
 
 module.exports = { checkBody, existingUser, checkToken, checkGuestBody }

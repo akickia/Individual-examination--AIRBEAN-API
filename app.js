@@ -7,21 +7,23 @@ const jwt = require('jsonwebtoken')
 const moment = require('moment')
 let orderMade = moment();
 
-
 app.use(express.json());
 
+//Get a list of all items in menu
 app.get('/api/beans', async (request, response) => {
     const getBeans = await beansDb.find({});
-    console.log(getBeans);
-    response.send({ success: true, beans: getBeans });
+    response.json({ success: true, beans: getBeans });
 });
 
+//Get a list of all users
 app.get('/api/users', async (request, response) => {
     const getUsers = await usersDb.find({});
-    response.send({ success: true, users: getUsers });
+    response.json({ success: true, users: getUsers });
 });
 
-// newUser = {
+//Sign up new user 
+//Expected input in body: 
+//{
 // username: username,
 // email: email,
 // password: password,
@@ -30,12 +32,8 @@ app.get('/api/users', async (request, response) => {
 //zip code: zipCode,
 // city: city
 //}
-// orders: {
-//23489238
-//}
-//}
-
-//Sign up new user
+//Middleware to check input in body + if username and email already exists
+//if not - add user to user database
 app.post('/api/signup', checkBody, existingUser, async (request, response) => {
     const newUser = request.body;
     await usersDb.insert(newUser);
@@ -43,6 +41,12 @@ app.post('/api/signup', checkBody, existingUser, async (request, response) => {
 });
 
 //Login user
+//Expected input in body: 
+//{
+// username: username,
+// password: password
+//}
+//Check if username and password is correct, if so add json webtoken for a limited time
 app.post('/api/login', async (request, response) => {
     const user = request.body;
     const existingUser = await usersDb.findOne({ username: user.username });
@@ -60,13 +64,15 @@ app.post('/api/login', async (request, response) => {
         response.status(400).json({ success: false, message: "User does not exist" });
     }
 })
-//Ev flytta till middleware senare efter vi lagt till token? 
 
 //Add to cart
+//Expected input in body: 
+//{ id: productid }
+//Check if product exist, then add to cart database
+//Add date as product id to avoid conflicts with same id
 app.post('/api/cart/add', async (request, response) => {
     const product = request.body;
     const findProduct = await beansDb.findOne({ id: product.id })
-    //Check if findproduct.hasProperty("price") ? Kolla på handledning om nödvändigt.
     if (findProduct) {
         const newCartItem = { ...findProduct, _id: new Date().getTime().toString() };
         cartDb.insert(newCartItem);
@@ -76,20 +82,24 @@ app.post('/api/cart/add', async (request, response) => {
     }
 })
 
-//AUT
+//Send user order
+//Expected input in body: 
+//{ id: user id }
+//Add token in header as authorization
+//Middleware to check if token is valid
+//If token is valid - check if user id exist and there is products in cart
+//If all is correct, add products in cart to user together with date and total sum of order
+//Empty cart and return when order will arrive + order value
 app.put('/api/cart/sendorder', checkToken, async (request, response) => {
     const userId = request.body._id;
     const user = await usersDb.findOne({ _id: userId });
     let productsInCart = await cartDb.find({});
-
     orderMade = moment();
-
     if (user) {
         if (productsInCart.length > 0) {
             const totalSum = productsInCart.reduce((sum, product) => {
                 return sum + product.price;
             }, 0);
-
             await usersDb.update({ _id: userId }, { $push: { orders: { items: productsInCart, date: orderMade.format(), totalPricePerOrder: totalSum } } }, {})
             await cartDb.remove({}, { multi: true })
             response.json({ success: true, message: "You order will be delivered " + orderMade.add(30, 'minutes').calendar() + " and the price will be: " + totalSum + " kr" })
@@ -101,7 +111,9 @@ app.put('/api/cart/sendorder', checkToken, async (request, response) => {
     }
 })
 
-// newGuestUser = {
+//Send guest order
+//Expected input in body: 
+//{
 // name: name,
 // email: email,
 // adress: {
@@ -109,55 +121,51 @@ app.put('/api/cart/sendorder', checkToken, async (request, response) => {
 //zip code: zipCode,
 // city: city
 //}
-//}
-
+//Middleware to check input in body 
+//Check if there are products in cart
+//If all is correct, add products in cart to guestorder database together with date and total sum of order
+//Empty cart and return when order will arrive + order value
 app.post('/api/cart/sendguestorder', checkGuestBody, async (request, response) => {
     const guestOrder = request.body
     const productsInCart = await cartDb.find({})
-
     orderMade = moment();
     if (productsInCart.length > 0) {
         const overallSum = productsInCart.reduce((sum, order) => {
             return sum + order.pric;
         }, 0);
-    
         const newOrder = {
             guestUser: guestOrder,
             products: productsInCart,
             date: orderMade.format(),
             totalSum: overallSum
         }
-
         await guestOrdersDb.insert(newOrder)
         await cartDb.remove({}, { multi: true })
         response.send({ success: true, newOrder: newOrder, message: "You order will be delivered " + orderMade.add(30, "minutes").calendar() + " and the price will be: " + overallSum + " kr" })
     } else {
         response.send({ success: false, message: "Your cart is empty!"})
     }
-   
 })
 
-
-//AUT
+//See order history
+//Expected input in body: 
+//{ id: user id }
+//Check if user exist
+//Return list of orders and total sum of all orders 
 app.get('/api/user/orderhistory', checkToken, async (request, response) => {
-
     const userId = request.body._id;
     const user = await usersDb.findOne({ _id: userId });
-
     if (user) {
         const overallSum = user.orders.reduce((sum, order) => {
             return sum + order.totalPricePerOrder;
         }, 0);
-        console.log(overallSum);
-
         response.send({ success: true, orders: user.orders, message: "The total price of all orders are: " + overallSum + " kr" });
     } else {
         response.send({ success: false, message: "The user does not exist. Please try again!" });
-
     }
-
 });
 
+//Start server at port 8000
 app.listen(8000, () => {
     console.log('App started on port 8000!!');
 });

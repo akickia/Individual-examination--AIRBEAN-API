@@ -1,3 +1,5 @@
+//Create databases
+
 const nedb = require('nedb-promise');
 const beansDb = new nedb({ filename: 'beans.db', autoload: true });
 const usersDb = new nedb({ filename: 'users.db', autoload: true });
