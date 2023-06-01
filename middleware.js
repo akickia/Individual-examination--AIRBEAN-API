@@ -78,11 +78,17 @@ function checkBodyUserId(request, response, next) {
 
 //Check if token is valid
 function checkToken (request, response, next) {
+  const userId = request.body._id;
   const token = request.headers.authorization
   try {
     const data = jwt.verify(token, 'a1b1c1')
     console.log(data)
-    next()
+    if (data.id === userId) {
+      next()
+    } else {
+      response.json({success: false, error: 'Invalid token'})
+    }
+    
   } catch (error) {
     response.json({success: false, error: 'Invalid token'})
   }
