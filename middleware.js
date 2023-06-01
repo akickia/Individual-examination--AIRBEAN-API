@@ -4,12 +4,26 @@ const jwt = require('jsonwebtoken')
 function checkBody(request, response, next) {
   const newUser = request.body;
   if (
-    newUser.hasOwnProperty("username") &&
-    newUser.hasOwnProperty("email") &&
-    newUser.hasOwnProperty("password") &&
-    newUser.adress.hasOwnProperty("streetname") &&
-    newUser.adress.hasOwnProperty("zipcode") &&
-    newUser.adress.hasOwnProperty("city") 
+    (newUser.hasOwnProperty("username") && newUser.username.length !== 0) &&
+    (newUser.hasOwnProperty("email") && newUser.email.length !== 0) &&
+    (newUser.hasOwnProperty("password") && newUser.password.length !== 0) &&
+    (newUser.adress.hasOwnProperty("streetname") && newUser.adress.streetname.length !== 0) &&
+    (newUser.adress.hasOwnProperty("zipcode") && newUser.adress.zipcode.length !== 0) &&
+    (newUser.adress.hasOwnProperty("city") && newUser.adress.city.length !== 0)  
+  ) {
+    next();
+  } else {
+    response.status(400).json({ success: false, error: 'Please enter the missing value/s' });
+  }
+}
+function checkGuestBody(request, response, next) {
+  const newUser = request.body;
+  if (
+    (newUser.hasOwnProperty("name") && newUser.name.length !== 0) &&
+    (newUser.hasOwnProperty("email") && newUser.email.length !== 0) &&
+    (newUser.adress.hasOwnProperty("streetname") && newUser.adress.streetname.length !== 0) &&
+    (newUser.adress.hasOwnProperty("zipcode") && newUser.adress.zipcode.length !== 0) &&
+    (newUser.adress.hasOwnProperty("city") && newUser.adress.city.length !== 0)  
   ) {
     next();
   } else {
@@ -42,4 +56,4 @@ function checkToken (request, response, next) {
 }
 
 
-module.exports = { checkBody, existingUser, checkToken }
+module.exports = { checkBody, existingUser, checkToken, checkGuestBody }
