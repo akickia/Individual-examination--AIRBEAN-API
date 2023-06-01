@@ -134,7 +134,7 @@ app.post('/api/cart/sendguestorder', checkBodyGuestOrder, async (request, respon
     orderMade = moment();
     if (productsInCart.length > 0) {
         const overallSum = productsInCart.reduce((sum, order) => {
-            return sum + order.pric;
+            return sum + order.price;
         }, 0);
         const newOrder = {
             guestUser: guestOrder,

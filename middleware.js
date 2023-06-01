@@ -68,7 +68,7 @@ function checkBodyLogin(request, response, next) {
 
 function checkBodyUserId(request, response, next) {
   const user = request.body
-    if (user.hasOwnProperty("id") && user.id.length !== 0) {
+    if (user.hasOwnProperty("_id") && user._id.length !== 0) {
       next()
     } else {
       response.status(400).send({success: false, error: "Wrong input, please try again"})
