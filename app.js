@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const { usersDb, beansDb, cartDb, guestOrdersDb } = require('./modules/db')
-const { checkBody, existingUser, checkToken, checkGuestBody } = require('./middleware');
+const { checkBody, existingUser, checkToken, checkGuestBody, checkBodyAdd } = require('./middleware');
 const jwt = require('jsonwebtoken')
 
 const moment = require('moment')
@@ -37,7 +37,7 @@ app.get('/api/users', async (request, response) => {
 app.post('/api/signup', checkBody, existingUser, async (request, response) => {
     const newUser = request.body;
     await usersDb.insert(newUser);
-    response.send({ success: true, user: newUser });
+    response.json({ success: true, user: newUser });
 });
 
 //Login user
@@ -55,13 +55,13 @@ app.post('/api/login', async (request, response) => {
             const token = jwt.sign({ id: existingUser._id }, 'a1b1c1', {
                 expiresIn: 300
             })
-            response.json({ success: true, message: "Welcome to AirBean!", token: token })
+            response.send({ success: true, message: "Welcome to AirBean! You are logged in", token: token })
         }
         else {
-            response.status(400).json({ success: false, message: "Wrong password, try again" })
+            response.status(400).send({ success: false, message: "Wrong password, please try again" })
         }
     } else {
-        response.status(400).json({ success: false, message: "User does not exist" });
+        response.status(400).send({ success: false, error: "User does not exist, please try again" });
     }
 })
 
@@ -70,7 +70,7 @@ app.post('/api/login', async (request, response) => {
 //{ id: productid }
 //Check if product exist, then add to cart database
 //Add date as product id to avoid conflicts with same id
-app.post('/api/cart/add', async (request, response) => {
+app.post('/api/cart/add', checkBodyAdd, async (request, response) => {
     const product = request.body;
     const findProduct = await beansDb.findOne({ id: product.id })
     if (findProduct) {
@@ -78,7 +78,7 @@ app.post('/api/cart/add', async (request, response) => {
         cartDb.insert(newCartItem);
         response.send({ success: true, message: "Product added to cart" })
     } else {
-        response.status(400).send({ success: false, message: "Something went wrong, please try again" })
+        response.status(400).send({ success: false, error: "Product does not exist, please try again" })
     }
 })
 
@@ -104,10 +104,10 @@ app.put('/api/cart/sendorder', checkToken, async (request, response) => {
             await cartDb.remove({}, { multi: true })
             response.json({ success: true, message: "You order will be delivered " + orderMade.add(30, 'minutes').calendar() + " and the price will be: " + totalSum + " kr" })
         } else {
-            response.status(400).send({ success: false, message: "No products in cart" })
+            response.status(400).send({ success: false, error: "No products in cart, please try again" })
         }
     } else {
-        response.send({ success: false, message: "The user does not exist. Please try again!" });
+        response.status(400).send({ success: false, message: "The user does not exist. Please try again!" });
     }
 })
 
@@ -141,9 +141,9 @@ app.post('/api/cart/sendguestorder', checkGuestBody, async (request, response) =
         }
         await guestOrdersDb.insert(newOrder)
         await cartDb.remove({}, { multi: true })
-        response.send({ success: true, newOrder: newOrder, message: "You order will be delivered " + orderMade.add(30, "minutes").calendar() + " and the price will be: " + overallSum + " kr" })
+        response.json({ success: true, newOrder: newOrder, message: "You order will be delivered " + orderMade.add(30, "minutes").calendar() + " and the price will be: " + overallSum + " kr" })
     } else {
-        response.send({ success: false, message: "Your cart is empty!"})
+        response.status(400).send({ success: false, error: "No products in cart, please try again"})
     }
 })
 
@@ -159,15 +159,15 @@ app.get('/api/user/orderhistory', checkToken, async (request, response) => {
         const overallSum = user.orders.reduce((sum, order) => {
             return sum + order.totalPricePerOrder;
         }, 0);
-        response.send({ success: true, orders: user.orders, message: "The total price of all orders are: " + overallSum + " kr" });
+        response.json({ success: true, orders: user.orders, message: "The total price of all orders are: " + overallSum + " kr" });
     } else {
-        response.send({ success: false, message: "The user does not exist. Please try again!" });
+        response.status(400).send({ success: false, error: "The user does not exist, please try again!" });
     }
 });
 
 //Start server at port 8000
 app.listen(8000, () => {
-    console.log('App started on port 8000!!');
+    console.log('App started on port 8000!');
 });
 
 

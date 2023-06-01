@@ -14,7 +14,7 @@ function checkBody(request, response, next) {
   ) {
     next();
   } else {
-    response.status(400).json({ success: false, error: 'Please enter the missing value/s' });
+    response.status(400).send({ success: false, error: 'Wrong input, please try again' });
   }
 }
 
@@ -30,7 +30,7 @@ function checkGuestBody(request, response, next) {
   ) {
     next();
   } else {
-    response.status(400).json({ success: false, error: 'Please enter the missing value/s' });
+    response.status(400).send({ success: false, error: 'Wrong input, please try again' });
   }
 }
 
@@ -39,12 +39,21 @@ async function existingUser (request, response, next) {
   const { username, email } = request.body
   const existingUser = await usersDb.findOne({ $or: [{ username: username }, { email: email }] });
   if (existingUser && existingUser.username === username) {
-      response.status(400).json({ success: false, message: "Username already exists, please try to login or request new password" });
+      response.status(400).send({ success: false, message: "Username already exists, please try to login or request new password" });
    } else if (existingUser && existingUser.email === email) {
-      response.status(400).json({ success: false, message: "Email already exists, please try to login or request new password" });
+      response.status(400).send({ success: false, message: "Email already exists, please try to login or request new password" });
   } else {
       next();
   }
+}
+
+function checkBodyAdd(request, response, next) {
+  const product = request.body
+    if (product.hasOwnProperty("id") && product.id.length !== 0) {
+      next()
+    } else {
+      response.status(400).send({success: false, error: "Wrong input, please try again"})
+    }
 }
 
 //Check if token is valid
@@ -59,4 +68,4 @@ function checkToken (request, response, next) {
   }
 }
 
-module.exports = { checkBody, existingUser, checkToken, checkGuestBody }
+module.exports = { checkBody, existingUser, checkToken, checkGuestBody, checkBodyAdd }
