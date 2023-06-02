@@ -165,8 +165,7 @@ async function estimatedDelivery() {
             let result =  currentTime.diff(deliveredTime, 'minutes');
             console.log(result);
             if (result > 1) {
-                usersDb.update({ _id: userId }, {$set: {orders:{element: {isDelivered: true}}}})
-                delivered = true;
+                usersDb.update({ _id: userId }, { $set: { [`orders.${index}.isDelivered`]: true } });
             } 
         });
     }
