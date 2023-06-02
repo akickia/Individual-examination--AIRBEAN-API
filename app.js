@@ -3,7 +3,7 @@ const app = express();
 const { usersDb, menuDb, cartDb, guestOrdersDb } = require('./modules/db')
 const { checkBodySignup, checkExistingUser, checkToken, checkBodyGuestOrder, checkBodyProductId, checkBodyLogin, checkBodyUserId } = require('./modules/middleware');
 const jwt = require('jsonwebtoken')
-
+const { estimatedDelivery } = require('./modules/functions')
 const moment = require('moment')
 let orderMade = moment();
 
