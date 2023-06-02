@@ -178,13 +178,13 @@ async function estimatedDelivery(userId) {
 //Return list of orders and total sum of all orders 
 app.get('/api/user/orderhistory', checkToken, checkBodyUserId, async (request, response) => {
     const userId = request.body._id;
-    estimatedDelivery(userId);
-    const user = await usersDb.findOne({ _id: userId });
-    if (user) {
-        const overallSum = user.orders.reduce((sum, order) => {
+    await estimatedDelivery(userId);
+    const updatedUser = await usersDb.findOne({ _id: userId });
+    if (updatedUser) {
+        const overallSum = updatedUser.orders.reduce((sum, order) => {
             return sum + order.totalPricePerOrder;
         }, 0);
-        response.json({ success: true, orders: user.orders, message: "The total price of all orders are: " + overallSum + " kr" });
+        response.json({ success: true, orders: updatedUser.orders, message: "The total price of all orders are: " + overallSum + " kr" });
     } else {
         response.status(400).send({ success: false, error: "The user does not exist, please try again!" });
     }
