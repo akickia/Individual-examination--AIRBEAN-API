@@ -103,7 +103,7 @@ app.put('/api/cart/sendorder', checkToken, checkBodyUserId, async (request, resp
             const totalSum = productsInCart.reduce((sum, product) => {
                 return sum + product.price;
             }, 0);
-            await usersDb.update({ _id: userId }, { $push: { orders: { items: productsInCart, date: orderMade.format(), totalPricePerOrder: totalSum } } }, {})
+            await usersDb.update({ _id: userId }, { $push: { orders: { items: productsInCart, date: orderMade.format(), totalPricePerOrder: totalSum, isDelivered: false } } }, {})
             await cartDb.remove({}, { multi: true })
             response.json({ success: true, message: "You order will be delivered " + orderMade.add(30, 'minutes').calendar() + " and the price will be: " + totalSum + " kr" })
         } else {
@@ -149,6 +149,29 @@ app.post('/api/cart/sendguestorder', checkBodyGuestOrder, async (request, respon
         response.status(400).send({ success: false, error: "No products in cart, please try again"})
     }
 })
+
+
+async function estimatedDelivery() {
+    let delivered = false;
+    let currentTime = moment();
+
+    // const userId = request.body._id;
+    const userId = '0PGpHLs9QQoQw6Qk';
+    const user = await usersDb.findOne({ _id: userId });
+
+    if (user.orders) {
+        user.orders.forEach((element, index) => {
+            let deliveredTime = element.date;
+            let result =  currentTime.diff(deliveredTime, 'minutes');
+            console.log(result);
+            if (result > 1) {
+                usersDb.update({ _id: userId }, {$set: {orders:{element: {isDelivered: true}}}})
+                delivered = true;
+            } 
+        });
+    }
+}
+estimatedDelivery();
 
 //See order history
 //Expected input in body: 
