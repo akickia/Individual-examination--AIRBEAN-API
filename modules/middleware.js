@@ -1,4 +1,4 @@
-const {usersDb} = require('./modules/db');
+const {usersDb} = require('./db');
 const jwt = require('jsonwebtoken')
 
 //Check if fields in body is correct for adding new user

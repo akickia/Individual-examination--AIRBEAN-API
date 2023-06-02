@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
-const { usersDb, beansDb, cartDb, guestOrdersDb } = require('./modules/db')
-const { checkBodySignup, checkExistingUser, checkToken, checkBodyGuestOrder, checkBodyProductId, checkBodyLogin, checkBodyUserId } = require('./middleware');
+const { usersDb, menuDb, cartDb, guestOrdersDb } = require('./modules/db')
+const { checkBodySignup, checkExistingUser, checkToken, checkBodyGuestOrder, checkBodyProductId, checkBodyLogin, checkBodyUserId } = require('./modules/middleware');
 const jwt = require('jsonwebtoken')
 
 const moment = require('moment')
@@ -11,7 +11,7 @@ app.use(express.json());
 
 //Get a list of all items in menu
 app.get('/api/beans', async (request, response) => {
-    const getBeans = await beansDb.find({});
+    const getBeans = await menuDb.find({});
     response.json({ success: true, beans: getBeans });
 });
 
@@ -54,7 +54,7 @@ app.post('/api/login', checkBodyLogin, async (request, response) => {
     if (existingUser) {
         if (existingUser.password === user.password) {
             const token = jwt.sign({ id: existingUser._id }, 'a1b1c1', {
-                expiresIn: 300
+                expiresIn: 3000
             })
             response.send({ success: true, message: "Welcome to AirBean! You are logged in", token: token })
         }
@@ -74,7 +74,7 @@ app.post('/api/login', checkBodyLogin, async (request, response) => {
 //Add date as product id to avoid conflicts with same id
 app.post('/api/cart/add', checkBodyProductId, async (request, response) => {
     const product = request.body;
-    const findProduct = await beansDb.findOne({ id: product.id })
+    const findProduct = await menuDb.findOne({ id: product.id })
     if (findProduct) {
         const newCartItem = { ...findProduct, _id: new Date().getTime().toString() };
         cartDb.insert(newCartItem);
@@ -151,26 +151,22 @@ app.post('/api/cart/sendguestorder', checkBodyGuestOrder, async (request, respon
 })
 
 
-async function estimatedDelivery() {
-    let delivered = false;
+async function estimatedDelivery(userId) {
     let currentTime = moment();
-
-    // const userId = request.body._id;
-    const userId = '0PGpHLs9QQoQw6Qk';
     const user = await usersDb.findOne({ _id: userId });
-
     if (user.orders) {
-        user.orders.forEach((element, index) => {
+        for(const [index, element] of user.orders.entries()) {
             let deliveredTime = element.date;
+            console.log(deliveredTime)
             let result =  currentTime.diff(deliveredTime, 'minutes');
             console.log(result);
-            if (result > 1) {
-                usersDb.update({ _id: userId }, { $set: { [`orders.${index}.isDelivered`]: true } });
+            if (result >= 1 && !element.isDelivered) {
+                await usersDb.update({ _id: userId }, { $set: { [`orders.${index}.isDelivered`]: true } });
             } 
-        });
+        };
     }
 }
-estimatedDelivery();
+
 
 //See order history
 //Expected input in body: 
@@ -182,6 +178,7 @@ estimatedDelivery();
 //Return list of orders and total sum of all orders 
 app.get('/api/user/orderhistory', checkToken, checkBodyUserId, async (request, response) => {
     const userId = request.body._id;
+    estimatedDelivery(userId);
     const user = await usersDb.findOne({ _id: userId });
     if (user) {
         const overallSum = user.orders.reduce((sum, order) => {
