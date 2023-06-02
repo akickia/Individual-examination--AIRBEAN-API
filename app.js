@@ -4,6 +4,7 @@ const { usersDb, menuDb, cartDb, guestOrdersDb } = require('./modules/db')
 const { checkBodySignup, checkExistingUser, checkToken, checkBodyGuestOrder, checkBodyProductId, checkBodyLogin, checkBodyUserId } = require('./modules/middleware');
 const jwt = require('jsonwebtoken')
 const { estimatedDelivery } = require('./modules/functions')
+
 const moment = require('moment')
 let orderMade = moment();
 
@@ -132,6 +133,7 @@ app.post('/api/cart/sendguestorder', checkBodyGuestOrder, async (request, respon
     const guestOrder = request.body
     const productsInCart = await cartDb.find({})
     orderMade = moment();
+
     if (productsInCart.length > 0) {
         const overallSum = productsInCart.reduce((sum, order) => {
             return sum + order.price;
@@ -146,10 +148,9 @@ app.post('/api/cart/sendguestorder', checkBodyGuestOrder, async (request, respon
         await cartDb.remove({}, { multi: true })
         response.json({ success: true, newOrder: newOrder, message: "You order will be delivered " + orderMade.add(30, "minutes").calendar() + " and the price will be: " + overallSum + " kr" })
     } else {
-        response.status(400).send({ success: false, error: "No products in cart, please try again"})
+        response.status(400).send({ success: false, error: "No products in cart, please try again" })
     }
 })
-
 
 //See order history
 //Expected input in body: 
@@ -158,16 +159,21 @@ app.post('/api/cart/sendguestorder', checkBodyGuestOrder, async (request, respon
 //Middleware to check input in body 
 //Middleware to check if token is valid
 //Check if user exist
+//Check if order is delivered
 //Return list of orders and total sum of all orders 
 app.get('/api/user/orderhistory', checkToken, checkBodyUserId, async (request, response) => {
     const userId = request.body._id;
     await estimatedDelivery(userId);
     const updatedUser = await usersDb.findOne({ _id: userId });
     if (updatedUser) {
-        const overallSum = updatedUser.orders.reduce((sum, order) => {
-            return sum + order.totalPricePerOrder;
-        }, 0);
-        response.json({ success: true, orders: updatedUser.orders, message: "The total price of all orders are: " + overallSum + " kr" });
+        if (updatedUser.orders) {
+            const overallSum = updatedUser.orders.reduce((sum, order) => {
+                return sum + order.totalPricePerOrder;
+            }, 0);
+            response.json({ success: true, orders: updatedUser.orders, message: "The total price of all orders are: " + overallSum + " kr" });
+        } else {
+            response.status(400).send({ success: false, error: "No orders made yet!" });
+        }
     } else {
         response.status(400).send({ success: false, error: "The user does not exist, please try again!" });
     }
