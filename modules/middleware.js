@@ -86,10 +86,10 @@ function checkToken(request, response, next) {
     if (data.id === userId) {
       next()
     } else {
-      response.json({ success: false, error: 'Invalid token' })
+      response.status(401).json({ success: false, error: 'Invalid token' })
     }
   } catch (error) {
-    response.json({ success: false, error: 'Invalid token' })
+    response.status(401).json({ success: false, error: 'Invalid token' })
   }
 }
 
