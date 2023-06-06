@@ -93,4 +93,42 @@ function checkToken(request, response, next) {
   }
 }
 
-module.exports = { checkBodySignup, checkExistingUser, checkToken, checkBodyGuestOrder, checkBodyProductId, checkBodyLogin, checkBodyUserId }
+function checkBodyAddProduct(request, response, next) {
+  const newProduct = request.body;
+  if (
+    (newProduct.hasOwnProperty("id") && newProduct.id.length !== 0) &&
+    (newProduct.hasOwnProperty("title") && newProduct.title.length !== 0) &&
+    (newProduct.hasOwnProperty("desc") && newProduct.desc.length !== 0) &&
+    (newProduct.hasOwnProperty("price") && newProduct.price.length !== 0) 
+  ) {
+    next();
+  } else {
+    response.status(400).send({ success: false, error: 'Wrong input, please try again' });
+  }
+}
+
+function checkAdminToken (request, response, next) {
+  const adminToken = request.headers.authorization
+  try {
+    const data = jwt.verify(adminToken, 'admin')
+    if (data) {
+      next()
+    } else {
+      response.status(401).send({ success: false, error: 'Invalid token' })
+    }
+  } catch (error) {
+    response.status(401).send({ success: false, error: 'Invalid token' })
+  }
+}
+
+module.exports = { 
+  checkBodySignup, 
+  checkExistingUser, 
+  checkToken, 
+  checkBodyGuestOrder, 
+  checkBodyProductId, 
+  checkBodyLogin, 
+  checkBodyUserId, 
+  checkBodyAddProduct,
+  checkAdminToken 
+}

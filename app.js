@@ -6,9 +6,12 @@ const jwt = require('jsonwebtoken')
 const { estimatedDelivery } = require('./modules/functions')
 
 const moment = require('moment')
-let orderMade = moment();
+let timeStamp = moment();
 
 app.use(express.json());
+
+const adminRouter = require("./routes/admin")
+app.use("/api/admin", adminRouter)
 
 //Get a list of all items in menu
 app.get('/api/beans', async (request, response) => {
@@ -98,15 +101,15 @@ app.put('/api/cart/sendorder', checkToken, checkBodyUserId, async (request, resp
     const userId = request.body._id;
     const user = await usersDb.findOne({ _id: userId });
     let productsInCart = await cartDb.find({});
-    orderMade = moment();
+    timeStamp = moment();
     if (user) {
         if (productsInCart.length > 0) {
             const totalSum = productsInCart.reduce((sum, product) => {
                 return sum + product.price;
             }, 0);
-            await usersDb.update({ _id: userId }, { $push: { orders: { items: productsInCart, date: orderMade.format(), totalPricePerOrder: totalSum, isDelivered: false } } }, {})
+            await usersDb.update({ _id: userId }, { $push: { orders: { items: productsInCart, date: timeStamp.format(), totalPricePerOrder: totalSum, isDelivered: false } } }, {})
             await cartDb.remove({}, { multi: true })
-            response.json({ success: true, message: "You order will be delivered " + orderMade.add(30, 'minutes').calendar() + " and the price will be: " + totalSum + " kr" })
+            response.json({ success: true, message: "You order will be delivered " + timeStamp.add(30, 'minutes').calendar() + " and the price will be: " + totalSum + " kr" })
         } else {
             response.status(400).send({ success: false, error: "No products in cart, please try again" })
         }
@@ -132,7 +135,7 @@ app.put('/api/cart/sendorder', checkToken, checkBodyUserId, async (request, resp
 app.post('/api/cart/sendguestorder', checkBodyGuestOrder, async (request, response) => {
     const guestOrder = request.body
     const productsInCart = await cartDb.find({})
-    orderMade = moment();
+    timeStamp = moment();
 
     if (productsInCart.length > 0) {
         const overallSum = productsInCart.reduce((sum, order) => {
@@ -141,12 +144,12 @@ app.post('/api/cart/sendguestorder', checkBodyGuestOrder, async (request, respon
         const newOrder = {
             guestUser: guestOrder,
             products: productsInCart,
-            date: orderMade.format(),
+            date: timeStamp.format(),
             totalSum: overallSum
         }
         await guestOrdersDb.insert(newOrder)
         await cartDb.remove({}, { multi: true })
-        response.json({ success: true, newOrder: newOrder, message: "You order will be delivered " + orderMade.add(30, "minutes").calendar() + " and the price will be: " + overallSum + " kr" })
+        response.json({ success: true, newOrder: newOrder, message: "You order will be delivered " + timeStamp.add(30, "minutes").calendar() + " and the price will be: " + overallSum + " kr" })
     } else {
         response.status(400).send({ success: false, error: "No products in cart, please try again" })
     }
@@ -179,9 +182,11 @@ app.get('/api/user/orderhistory', checkToken, checkBodyUserId, async (request, r
     }
 });
 
+
+
+
+  
 //Start server at port 8000
 app.listen(8000, () => {
     console.log('App started on port 8000!');
 });
-
-
