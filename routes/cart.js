@@ -25,6 +25,27 @@ router.post('/add', checkBodyProductId, async (req, res) => {
   }
 });
 
+router.delete('/remove', checkBodyProductId, async (req, res) => {
+  const product = req.body;
+  const findProduct = await cartDb.findOne({ id: product.id });
+  if (findProduct) {
+    cartDb.remove({ id: product.id });
+    res.send({ success: true, message: `Product ${product.title} has been removed from the cart` });
+  } else {
+    res.status(404).send({ success: false, error: 'No such product, please try again' });
+  }
+}
+);
+
+router.get('/order', async (req, res) => {
+  const seCart = await cartDb.find({})
+  if (seCart) {
+    res.json({ success: true, cart: seCart })
+  } else {
+    res.status(404).send({ success: false, error: "No items in cart" })
+  }
+})
+
 //Send user order
 //Expected input in body:
 //{ id: user id }
