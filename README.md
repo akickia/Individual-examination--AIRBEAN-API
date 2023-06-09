@@ -2,18 +2,24 @@
 
 Using node, express, nedb, jsonwebtoken and bcrypt to create basic backend functionallity for Airbean app. 
 
-Functions user: 
+Functions user:
+* Get menu
 * Sign up user
 * Login user 
-* See menu 
+* Get cart
 * Add to cart
+* Remove from cart
 * Send order (if logged in)
-* Get order history (if logged in)
 * Send order as guest
+* Get order history (if logged in)
 
 Functions admin:
 * Login
+* Get users
+* Get admins
 * Add products in menu
 * Update products in menu
 * Remove product in menu
+* Get campaigns
 * Add campains
+* Remove campaigns
