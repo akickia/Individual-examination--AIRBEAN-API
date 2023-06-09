@@ -4,6 +4,16 @@ const { usersDb, guestOrdersDb, cartDb, menuDb } = require('../modules/db');
 const { checkToken, checkBodyUserId, checkBodyGuestOrder, checkBodyProductId } = require('../modules/middleware');
 const moment = require('moment');
 
+//Get items in cart
+router.get('/order', async (req, res) => {
+  const seCart = await cartDb.find({})
+  if (seCart) {
+    res.json({ success: true, cart: seCart })
+  } else {
+    res.status(404).send({ success: false, error: "No items in cart" })
+  }
+})
+
 //Add to cart
 //Expected input in body:
 //{ id: productid }
@@ -25,6 +35,11 @@ router.post('/add', checkBodyProductId, async (req, res) => {
   }
 });
 
+//Remove product from cart
+//Expected input in body:
+//{ id: productid }
+//Middleware to check input in body
+//Check if product exist, then remove from cart database
 router.delete('/remove', checkBodyProductId, async (req, res) => {
   const product = req.body;
   const findProduct = await cartDb.findOne({ id: product.id });
@@ -36,15 +51,6 @@ router.delete('/remove', checkBodyProductId, async (req, res) => {
   }
 }
 );
-
-router.get('/order', async (req, res) => {
-  const seCart = await cartDb.find({})
-  if (seCart) {
-    res.json({ success: true, cart: seCart })
-  } else {
-    res.status(404).send({ success: false, error: "No items in cart" })
-  }
-})
 
 //Send user order
 //Expected input in body:
