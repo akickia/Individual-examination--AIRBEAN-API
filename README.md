@@ -23,3 +23,7 @@ Functions admin:
 * Get campaigns
 * Add campains
 * Remove campaigns
+
+## Bonus: 
+Started working on a frontend for this server: 
+https://github.com/akickia/AirBean.git
