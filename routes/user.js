@@ -42,7 +42,7 @@ router.post('/login', checkBodyLogin, async (req, res) => {
       const token = jwt.sign({ id: existingUser._id }, 'a1b1c1', {
         expiresIn: 3000,
       });
-      res.send({ success: true, message: 'Welcome to AirBean! You are logged in', token: token });
+      res.send({ success: true, message: 'Welcome to AirBean! You are logged in', token: token, id: existingUser._id });
     } else {
       res.status(401).send({ success: false, error: 'Wrong password, please try again' });
     }
