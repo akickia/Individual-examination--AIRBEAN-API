@@ -23,7 +23,7 @@ function checkAdminToken(req, res, next) {
   const adminToken = req.headers.authorization;
   try {
     const data = jwt.verify(adminToken, 'admin');
-    if (data) {
+    if (data && data.role === "admin") {
       next();
     } else {
       res.status(401).send({ success: false, error: 'Invalid token' });
