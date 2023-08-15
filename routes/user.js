@@ -20,7 +20,7 @@ router.post('/signup', checkBodySignup, checkExistingUser, async (req, res) => {
     password: hashed,
     adress: {
       streetname: userInput.adress.streetname,
-      zipcode: userInput.adress.zipcode,
+      zipcode: userInput.adress.zipcod400e,
       city: userInput.adress.city,
     },
   };
@@ -40,9 +40,9 @@ router.post('/login', checkBodyLogin, async (req, res) => {
     const correctPassword = await checkHashedPassword(user.password, existingUser.password)
     if (correctPassword) {
       const token = jwt.sign({ id: existingUser._id }, 'a1b1c1', {
-        expiresIn: 3000,
+        expiresIn: 300, //Seconds
       });
-      res.send({ success: true, message: 'Welcome to AirBean! You are logged in', token: token, id: existingUser._id });
+      res.send({ success: true, message: 'Welcome to AirBean! You are logged in', token: token, id: existingUser._id, username: existingUser.username, usermail: existingUser.email });
     } else {
       res.status(401).send({ success: false, error: 'Wrong password, please try again' });
     }
@@ -59,7 +59,7 @@ router.post('/login', checkBodyLogin, async (req, res) => {
 //Check if user exist
 //Check if order is delivered
 //Return list of orders and total sum of all orders
-router.get('/orderhistory', checkToken, checkBodyUserId, async (req, res) => {
+router.post('/orderhistory', checkToken, checkBodyUserId, async (req, res) => {
   const userId = req.body._id;
   await estimatedDelivery(userId);
   const updatedUser = await usersDb.findOne({ _id: userId });
