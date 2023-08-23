@@ -51,6 +51,23 @@ router.post('/login', checkBodyLogin, async (req, res) => {
   }
 });
 
+//Check token when page reloads
+router.post('/checktoken', async (req, res) => {
+  const userId = req.body._id;
+  const existingUser = await usersDb.findOne({ _id: userId });
+  const token = req.headers.authorization;
+  try {
+    const data = jwt.verify(token, 'a1b1c1');
+    if (data.id === existingUser._id) {
+      res.send({success: true, message: 'User logged in'})
+    } else {
+      res.json({ success: false, error: 'Invalid token for this user' });
+    }
+  } catch (error) {
+    res.json({ success: false, error: 'Invalid token' });
+  }
+})
+
 //See order history
 //Expected input in body:
 //{ id: user id }
@@ -68,9 +85,9 @@ router.post('/orderhistory', checkToken, checkBodyUserId, async (req, res) => {
       const overallSum = updatedUser.orders.reduce((sum, order) => {
         return sum + order.totalPricePerOrder;
       }, 0);
-      res.json({ success: true, orders: updatedUser.orders, message: 'The total price of all orders are: ' + overallSum + ' kr' });
+      res.json({ success: true, orders: updatedUser.orders, overallSum: overallSum, message: 'Totalsuma:  ' + overallSum + ' kr' });
     } else {
-      res.status(404).send({ success: false, error: 'No orders made yet' });
+      res.status(404).send({ success: false, message: 'Inga ordrar gjorda ännu' });
     }
   } else {
     res.status(401).send({ success: false, error: 'The user does not exist, please try again!' });

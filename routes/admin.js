@@ -44,6 +44,18 @@ router.get('/users', checkAdminToken, async (req, res) => {
   }
 });
 
+router.delete('/removeuser', checkAdminToken, async (req, res) => {
+  const userId = req.body.id;
+  const user = await usersDb.findOne({ _id: userId });
+  if (user) {
+    usersDb.remove({ _id: userId });
+    res.send({ success: true, message: `User ${user.username} has been removed` });
+  } else {
+    res.status(404).send({ success: false, error: 'No such user, please try again' });
+  }
+}
+);
+
 //Get all admins
 //Middleware to check if token is valid
 router.get('/admins', checkAdminToken, async (req, res) => {
