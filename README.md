@@ -14,7 +14,7 @@ Functions user:
 * Get order history (if logged in)
 
 Functions admin:
-* Login
+* Login admin
 * Get users
 * Get admins
 * Add products in menu
@@ -23,6 +23,7 @@ Functions admin:
 * Get campaigns
 * Add campains
 * Remove campaigns
+* Remove users
 
 ## Bonus: 
 Started working on a frontend for this server: 
