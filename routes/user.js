@@ -85,7 +85,7 @@ router.post('/orderhistory', checkToken, checkBodyUserId, async (req, res) => {
       const overallSum = updatedUser.orders.reduce((sum, order) => {
         return sum + order.totalPricePerOrder;
       }, 0);
-      res.json({ success: true, orders: updatedUser.orders, overallSum: overallSum, message: 'Totalsuma:  ' + overallSum + ' kr' });
+      res.json({ success: true, orders: updatedUser.orders, overallSum: overallSum, message: 'Totalsumma:  ' + overallSum + ' kr' });
     } else {
       res.status(404).send({ success: false, message: 'Inga ordrar gjorda ännu' });
     }
